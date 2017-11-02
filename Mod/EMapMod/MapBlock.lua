@@ -1,8 +1,12 @@
 --[[
 Title: MapBlock
-Author(s):  Bl.Chock
+Author(s):  Bl.Chock, refactored by LiXizhi 2017.11.2 (Still needs factoring)
 Date: 2017年4月1日
 Desc: map block item
+## review by LXizhi 
+- is_show_in_list added
+- TODO: this mod should be non-aggressive and register as few block types as possible. 
+
 use the lib:
 ------------------------------------------------------------
 NPL.load("(gl)Mod/EMapMod/MapBlock.lua");
@@ -17,88 +21,122 @@ local BlockEngine = commonlib.gettable("MyCompany.Aries.Game.BlockEngine");
 local CommandManager  = commonlib.gettable("MyCompany.Aries.Game.CommandManager");
 MapBlock.ID = 2333 -- 彩色地图方块
 MapBlock.IDM = 2339 -- id上限
-local Materials =
-{{  id = 2334; -- 预留地图方块(51)
-	mc_id = "10";
-	name = "m_magma";
-	text = "虚拟校园方块-预留";
-	mapcolor = "#f88633";
-	obstruction = "true";
-	solid = "true";
-	icon = "Texture/blocks/items/lava_flow.png";
-	light="true";
-	categoryID="5";
-	texture = "Texture/blocks/lava/lava_fps10_a010.png"};
-{  	id = 2335; -- 砖头(51)
-	mc_id = "12";
-	name = "m_brick";
-	text = "虚拟校园方块-砖头";
-	mapcolor = "#ebdcb3";
-	step_sound = "sand";
-	material = "sand";
-	obstruction = "true";
-	solid = "true";
-	icon = "Texture/blocks/items/sand.png";
-	texture = "Texture/blocks/sand.png"};
-{  	id = 2336; -- 马路(241/180)
-	mc_id = "171:7";
-	name = "m_highway";
-	text = "虚拟校园方块-马路";
-	mapcolor = "#524630";
-	step_sound = "stone";
-	material = "sand";
-	obstruction = "false";
-	template="carpet";
-	icon = "Texture/blocks/items/carpet_gray.png";
-	texture = "Texture/blocks/wool_colored_gray.png"};
-{  	id = 2337; -- 水围石(185/4)
-	mc_id = "126:3";
-	name = "m_wstone";
-	class = "BlockSlab";
-	item_class = "ItemSlab";
-	text = "虚拟校园方块-水围石";
-	mapcolor = "#88572f";
-	step_sound = "wood";
-	obstruction = "true";
-	modelName="slab";
-	shape="slab";
-	blockcamera="true";
-	customModel="true";
-	template="DataOnlyTwo";
-	icon = "Texture/blocks/items/slab_jungle.png";
-	texture = "Texture/blocks/planks_jungle.png"};
-{  id = 2338; -- 动态水(75)
-	mc_id = "8";
-	name = "m_water";
-	class = "BlockLiquidFlow";
-	text = "虚拟校园方块-水";
-	texture = "Texture/blocks/water/water_fps10_a009.png";
-	speedReduction = "0.4";
-	mapcolor = "#ddeaf0";
-	associated_blockid = "76";
-	material = "water";
-	normalMap = "Texture/ripple/WaterBumpMap.dds";
-	disable_gen_icon = "true";
-	categoryID = "8";
-	liquid="true";
-	blendedTexture="true";
-	transparent="true"};
-{  id = 2339; -- 水(76)
-	mc_id = "9";
-	name = "m_waterStill";
-	class = "BlockLiquidStill";
-	text = "虚拟校园方块-静态水";
-	texture = "Texture/blocks/water/water_fps10_a009.png";
-	speedReduction = "0.4";
-	mapcolor = "#ddeaf0";
-	associated_blockid = "75";
-	material = "water";
-	normalMap = "Texture/ripple/WaterBumpMap.dds";
-	disable_gen_icon = "true";
-	categoryID = "8";
-	liquid="true";
-	blendedTexture="true";
-	transparent="true"};
+
+local Materials = {
+{ 
+	id = 2333, -- 虚拟校园地图方块
+	is_show_in_list = false,
+	name = "MapBlock",
+	item_class="ItemColorBlock", -- 这个决定了颜色方块显示(来自彩色方块10)
+	text = "虚拟校园地图方块",
+	disable_gen_icon="true",
+	icon="Texture/blocks/items/color_block.png",
+	texture="Texture/blocks/colorblock.png",
+	color_data="true",
+	obstruction="true",
+	solid="true",
+	cubeMode="true",
+	mapcolor="#f88633",
+	-- 这个决定了是否能存储entity(来自物理模型22)
+	-- class="BlockModel",
+	-- entity_class="EntityBlockModel",
+	-- hasAction="false",
+	-- class="BlockCommandBlock",
+	-- entity_class="EntityCommandBlock",
+},
+{ 
+	id = 2334, -- 预留地图方块(51)
+	is_show_in_list = false,
+	name = "m_magma",
+	text = "虚拟校园方块-预留",
+	mapcolor = "#f88633",
+	obstruction = "true",
+	solid = "true",
+	icon = "Texture/blocks/items/lava_flow.png",
+	light="true",
+	categoryID="5",
+	texture = "Texture/blocks/lava/lava_fps10_a010.png"
+},
+{  	
+	id = 2335, -- 砖头(51)
+	is_show_in_list = false,
+	name = "m_brick",
+	text = "虚拟校园方块-砖头",
+	mapcolor = "#ebdcb3",
+	step_sound = "sand",
+	material = "sand",
+	obstruction = "true",
+	solid = "true",
+	icon = "Texture/blocks/items/sand.png",
+	texture = "Texture/blocks/sand.png"
+},
+{  	
+	id = 2336, -- 马路(241/180)
+	is_show_in_list = false,
+	name = "m_highway",
+	text = "虚拟校园方块-马路",
+	mapcolor = "#524630",
+	step_sound = "stone",
+	material = "sand",
+	obstruction = "false",
+	template="carpet",
+	icon = "Texture/blocks/items/carpet_gray.png",
+	texture = "Texture/blocks/wool_colored_gray.png"
+},
+{  	
+	id = 2337, -- 水围石(185/4)
+	is_show_in_list = false,
+	name = "m_wstone",
+	class = "BlockSlab",
+	item_class = "ItemSlab",
+	text = "虚拟校园方块-水围石",
+	mapcolor = "#88572f",
+	step_sound = "wood",
+	obstruction = "true",
+	modelName="slab",
+	shape="slab",
+	blockcamera="true",
+	customModel="true",
+	template="DataOnlyTwo",
+	icon = "Texture/blocks/items/slab_jungle.png",
+	texture = "Texture/blocks/planks_jungle.png"
+},
+{  
+	id = 2338, -- 动态水(75)
+	is_show_in_list = false,
+	name = "m_water",
+	class = "BlockLiquidFlow",
+	text = "虚拟校园方块-水",
+	texture = "Texture/blocks/water/water_fps10_a009.png",
+	speedReduction = "0.4",
+	mapcolor = "#ddeaf0",
+	associated_blockid = "76",
+	material = "water",
+	normalMap = "Texture/ripple/WaterBumpMap.dds",
+	disable_gen_icon = "true",
+	categoryID = "8",
+	liquid="true",
+	blendedTexture="true",
+	transparent="true"
+},
+{  
+	id = 2339, -- 水(76)
+	is_show_in_list = false,
+	name = "m_waterStill",
+	class = "BlockLiquidStill",
+	text = "虚拟校园方块-静态水",
+	texture = "Texture/blocks/water/water_fps10_a009.png",
+	speedReduction = "0.4",
+	mapcolor = "#ddeaf0",
+	associated_blockid = "75",
+	material = "water",
+	normalMap = "Texture/ripple/WaterBumpMap.dds",
+	disable_gen_icon = "true",
+	categoryID = "8",
+	liquid="true",
+	blendedTexture="true",
+	transparent="true"
+},
 }
 
 -- 百度地图水的像素颜色
@@ -109,48 +147,6 @@ end
 
 function MapBlock:init()
 	LOG.std(nil, "info", "MapBlock", "init");
-	-- customblocks desc="ID must be in range:2000-5000"
-	GameLogic.GetFilters():add_filter("block_types", function(xmlRoot) 
-		local blocks = commonlib.XPath.selectNode(xmlRoot, "/blocks/");
-		if(blocks) then
-			blocks[#blocks+1] = {name="block", attr={
-				singleSideTex="true",
-				name="MapBlock",
-				id=MapBlock.ID,
-				item_class="ItemColorBlock", -- 这个决定了颜色方块显示(来自彩色方块10)
-				text="虚拟校园地图方块",
-				searchkey="虚拟校园地图方块",
-				disable_gen_icon="true",
-				icon="Texture/blocks/items/color_block.png",
-				texture="Texture/blocks/colorblock.png",
-				color_data="true",
-				obstruction="true",
-				solid="true",
-				cubeMode="true",
-				mapcolor="#f88633",
-				-- 这个决定了是否能存储entity(来自物理模型22)
-				-- class="BlockModel",
-				-- entity_class="EntityBlockModel",
-				-- hasAction="false",
-
-				-- class="BlockCommandBlock",
-				-- entity_class="EntityCommandBlock",
-			}}
-			LOG.std(nil, "info", "MapBlock", "a new block is registered");
-		end
-		return xmlRoot;
-	end)
-
-	-- add block to category list to be displayed in builder window (E key)
-	GameLogic.GetFilters():add_filter("block_list", function(xmlRoot) 
-		for node in commonlib.XPath.eachNode(xmlRoot, "/blocklist/category") do
-			if(node.attr.name == "tool") then
-				node[#node+1] = {name="block", attr={name="MapBlock"}};
-			end
-		end
-		return xmlRoot;
-	end)
-
 	self:initMaterial()
 end
 
@@ -266,10 +262,10 @@ function MapBlock:deleteArea(po1,po2,blockID)
 end
 
 function MapBlock:initMaterial()
-	for k,Mat in ipairs(Materials) do
-		GameLogic.GetFilters():add_filter("block_types", function(xmlRoot) 
-			local blocks = commonlib.XPath.selectNode(xmlRoot, "/blocks/");
-			if(blocks) then
+	GameLogic.GetFilters():add_filter("block_types", function(xmlRoot) 
+		local blocks = commonlib.XPath.selectNode(xmlRoot, "/blocks/");
+		if(blocks) then
+			for _,Mat in ipairs(Materials) do
 				blocks[#blocks+1] = {name="block", attr={
 					singleSideTex="true",
 					name=Mat.name,
@@ -301,17 +297,21 @@ function MapBlock:initMaterial()
 					blockcamera = Mat.blockcamera;
 					customModel = Mat.customModel;
 				}}
-				LOG.std(nil, "info", Mat.name, "a new block is registered");
+				LOG.std(nil, "info", "MapBlock", "block %s (%d) is registered",  Mat.name, Mat.id);
 			end
-			return xmlRoot;
-		end)
-		GameLogic.GetFilters():add_filter("block_list", function(xmlRoot) 
-			for node in commonlib.XPath.eachNode(xmlRoot, "/blocklist/category") do
-				if(node.attr.name == "tool") then
-					node[#node+1] = {name="block", attr={name=Mat.name}};
+		end
+		return xmlRoot;
+	end)
+	GameLogic.GetFilters():add_filter("block_list", function(xmlRoot) 
+		for node in commonlib.XPath.eachNode(xmlRoot, "/blocklist/category") do
+			if(node.attr.name == "tool") then
+				for _, Mat in ipairs(Materials) do
+					if(Mat.is_show_in_list) then
+						node[#node+1] = {name="block", attr={ name=Mat.name }};
+					end
 				end
 			end
-			return xmlRoot;
-		end)
-	end
+		end
+		return xmlRoot;
+	end)
 end
